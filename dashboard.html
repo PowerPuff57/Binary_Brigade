@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Relevance Check System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .upload-section {
+            display: none;
+        }
+
+        .upload-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input {
+            padding: 10px;
+            background: #f5f5f5;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result-item {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .high {
+            color: #10b981;
+        }
+
+        .medium {
+            color: #f59e0b;
+        }
+
+        .low {
+            color: #ef4444;
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .skill-tag {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .missing-skill {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .suggestion {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .success-message {
+            color: #059669;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .section-header {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                margin-bottom: 5px;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .stat-card {
+                min-width: auto;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Resume Relevance Check System</h1>
+            <p class="subtitle">AI-Powered Resume Evaluation for Innomatics Research Labs</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'jd')">Upload Job Description</button>
+            <button class="tab" onclick="switchTab(event, 'resume')">Upload Resume</button>
+            <button class="tab" onclick="switchTab(event, 'results')">View Results</button>
+        </div>
+
+        <div class="card">
+            <!-- Job Description Upload Section -->
+            <div id="jd-section" class="upload-section active">
+                <h2 class="section-header">Upload Job Description</h2>
+                <form id="jd-form">
+                    <div class="form-group">
+                        <label for="company">Company Name *</label>
+                        <input type="text" id="company" name="company" required placeholder="e.g., Innomatics Research Labs">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" id="location" name="location" placeholder="e.g., Bangalore, Hyderabad">
+                    </div>
+                    <div class="form-group">
+                        <label for="jd-text">Job Description (Text)</label>
+                        <textarea id="jd-text" name="jd_text" rows="10" placeholder="Paste job description here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="jd-file">Or Upload JD File</label>
+                        <input type="file" id="jd-file" name="jd_file" class="file-input" accept=".pdf,.docx,.txt">
+                    </div>
+                    <button type="submit" class="btn">Upload Job Description</button>
+                </form>
+            </div>
+
+            <!-- Resume Upload Section -->
+            <div id="resume-section" class="upload-section">
+                <h2 class="section-header">Upload Resume for Evaluation</h2>
+                <form id="resume-form">
+                    <div class="form-group">
+                        <label for="job-select">Select Job *</label>
+                        <select id="job-select" name="job_id" required>
+                            <option value="">Select a job...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resume-file">Upload Resume *</label>
+                        <input type="file" id="resume-file" name="resume_file" class="file-input" accept=".pdf,.docx,.txt" required>
+                    </div>
+                    <button type="submit" class="btn">Evaluate Resume</button>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="upload-section">
+                <h2 class="section-header">Evaluation Results</h2>
+                <div class="form-group">
+                    <label for="results-job-select">Select Job to View Results</label>
+                    <select id="results-job-select">
+                        <option value="">Select a job...</option>
+                    </select>
+                </div>
+                
+                <!-- Statistics -->
+                <div id="results-stats" class="stats" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-resumes">0</div>
+                        <div class="stat-label">Total Resumes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="high-matches">0</div>
+                        <div class="stat-label">High Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="medium-matches">0</div>
+                        <div class="stat-label">Medium Matches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="low-matches">0</div>
+                        <div class="stat-label">Low Matches</div>
+                    </div>
+                </div>
+
+                <!-- Results Container -->
+                <div id="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="card loading" style="display: none;">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px;">Processing...</p>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentJobs = [];
+
+        // Utility Functions
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+            `;
+            
+            alertContainer.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+            });
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
+
+        // Tab Management
+        function switchTab(event, tab) {
+            // Update tab appearance
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.upload-section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-section').classList.add('active');
+            
+            // Load jobs if needed
+            if (tab === 'resume' || tab === 'results') {
+                loadJobs();
+            }
+        }
+
+        // Job Management
+        async function loadJobs() {
+            try {
+                const response = await fetch('/api/jobs');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const jobs = await response.json();
+                currentJobs = jobs;
+
+                // Update job select dropdowns
+                const jobSelect = document.getElementById('job-select');
+                const resultsJobSelect = document.getElementById('results-job-select');
+
+                // Clear existing options
+                jobSelect.innerHTML = '<option value="">Select a job...</option>';
+                resultsJobSelect.innerHTML = '<option value="">Select a job...</option>';
+
+                // Add job options
+                jobs.forEach(job => {
+                    const optionText = `${job.title} at ${job.company}`;
+                    
+                    const option1 = document.createElement('option');
+                    option1.value = job.id;
+                    option1.textContent = optionText;
+                    
+                    const option2 = document.createElement('option');
+                    option2.value = job.id;
+                    option2.textContent = optionText;
+                    
+                    jobSelect.appendChild(option1);
+                    resultsJobSelect.appendChild(option2);
+                });
+
+                if (jobs.length === 0) {
+                    showAlert('No jobs found. Please upload a job description first.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                showAlert('Error loading jobs. Please check your connection.', 'error');
+            }
+        }
+
+        // Form Handling
+        async function handleJobDescriptionSubmit(event) {
+            event.preventDefault();
+            showLoading();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Validate form
+            const company = formData.get('company');
+            const jdText = formData.get('jd_text');
+            const jdFile = formData.get('jd_file');
+            
+            if (!company.trim()) {
+                hideLoading();
+                showAlert('Company name is required.', 'error');
+                return;
+            }
+            
+            if (!jdText.trim() && !jdFile.name) {
+                hideLoading();
+                showAlert('Please enter job description text or upload a file.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/upload_jd', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert(result.message);
+                    form.reset();
+                    loadJobs(); // Refresh job list
+                } else {
+                    showAlert(result.message || 'Unknown error occurred', 'error');
+                }
+            } catch (error) {
+                console.error('Error uploading job description:', error);
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function handleResumeSubmit(event) {
+            event.preventDefault();
+            showLoading();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            // Validate form
+            const jobId = formData.get('job_id');
+            const resumeFile = formData.get('resume_file');
+            
+            if (!jobId) {
+                hideLoading();
+                showAlert('Please select a job.', 'error');
+                return;
+            }
+            
+            if (!resumeFile.name) {
+                hideLoading();
+                showAlert('Please select a resume file.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/upload_resume', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showAlert(result.message);
+                    form.reset();
+                    
+                    // Switch to results tab and show evaluation
+                    const resultsTab = document.querySelectorAll('.tab')[2];
+                    switchTab({target: resultsTab}, 'results');
+                    
+                    // Auto-select the job and load results
+                    document.getElementById('results-job-select').value = jobId;
+                    handleResultsSelect({target: {value: jobId}});
+                } else {
+                    showAlert(result.message || 'Unknown error occurred', 'error');
+                }
+            } catch (error) {
+                console.error('Error uploading resume:', error);
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Results Handling
+        async function handleResultsSelect(event) {
+            const jobId = event.target.value;
+            const container = document.getElementById('results-container');
+            const statsDiv = document.getElementById('results-stats');
+            
+            // Clear existing content
+            container.innerHTML = '';
+            statsDiv.style.display = 'none';
+            
+            if (!jobId) {
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`/api/evaluations/${jobId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const evaluations = await response.json();
+                
+                if (evaluations.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>No resumes evaluated for this job yet.</p>
+                            <p>Upload a resume to see evaluation results here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Update statistics
+                const stats = {
+                    total: evaluations.length,
+                    high: evaluations.filter(e => e.verdict === 'HIGH').length,
+                    medium: evaluations.filter(e => e.verdict === 'MEDIUM').length,
+                    low: evaluations.filter(e => e.verdict === 'LOW').length
+                };
+                
+                document.getElementById('total-resumes').textContent = stats.total;
+                document.getElementById('high-matches').textContent = stats.high;
+                document.getElementById('medium-matches').textContent = stats.medium;
+                document.getElementById('low-matches').textContent = stats.low;
+                statsDiv.style.display = 'flex';
+                
+                // Display evaluation results
+                evaluations.forEach((evaluation, index) => {
+                    const verdictClass = evaluation.verdict.toLowerCase();
+                    
+                    // Create matched skills HTML
+                    const matchedSkillsHtml = evaluation.matched_skills && evaluation.matched_skills.length > 0
+                        ? evaluation.matched_skills.map(skill => 
+                            `<span class="skill-tag">${skill}</span>`
+                        ).join('')
+                        : '<span class="skill-tag">None</span>';
+                    
+                    // Create missing skills HTML
+                    const missingSkillsHtml = evaluation.missing_skills && evaluation.missing_skills.length > 0
+                        ? evaluation.missing_skills.map(skill => 
+                            `<span class="skill-tag missing-skill">${skill}</span>`
+                        ).join('')
+                        : '<span class="skill-tag">None</span>';
+                    
+                    // Create suggestions HTML
+                    const suggestionsHtml = evaluation.suggestions && evaluation.suggestions.length > 0
+                        ? evaluation.suggestions.map(suggestion => 
+                            `<div class="suggestion">${suggestion}</div>`
+                        ).join('')
+                        : '<div class="suggestion">No specific suggestions available.</div>';
+                    
+                    const resultHtml = `
+                        <div class="result-item">
+                            <h3>${evaluation.name || 'Unknown'} (${evaluation.email || 'No email'})</h3>
+                            <div class="score ${verdictClass}">
+                                ${evaluation.verdict} (${evaluation.relevance_score}%)
+                            </div>
+                            <p><strong>Hard Match Score:</strong> ${evaluation.hard_match_score || 0}%</p>
+                            <p><strong>Semantic Match Score:</strong> ${evaluation.semantic_match_score || 0}%</p>
+                            <p><strong>Feedback:</strong> ${evaluation.feedback || 'No feedback available'}</p>
+                            
+                            <div style="margin-top: 15px;">
+                                <strong>Matched Skills:</strong>
+                                <div class="skills-list">${matchedSkillsHtml}</div>
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <strong>Missing Skills:</strong>
+                                <div class="skills-list">${missingSkillsHtml}</div>
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <strong>Suggestions for Improvement:</strong>
+                                ${suggestionsHtml}
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.innerHTML += resultHtml;
+                });
+                
+            } catch (error) {
+                console.error('Error fetching results:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc2626;">Error loading results: ${error.message}</p>
+                        <p>Please try again or check your connection.</p>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load jobs on page load
+            loadJobs();
+            
+            // Form event listeners
+            document.getElementById('jd-form').addEventListener('submit', handleJobDescriptionSubmit);
+            document.getElementById('resume-form').addEventListener('submit', handleResumeSubmit);
+            document.getElementById('results-job-select').addEventListener('change', handleResultsSelect);
+            
+            // File input validation
+            document.getElementById('jd-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showAlert('Please select a PDF, DOCX, or TXT file.', 'error');
+                        e.target.value = '';
+                    }
+                }
+            });
+            
+            document.getElementById('resume-file').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showAlert('Please select a PDF, DOCX, or TXT file.', 'error');
+                        e.target.value = '';
+                    }
+                }
+            });
+            
+            console.log('Dashboard initialized successfully');
+        });
+    </script>
+</body>
+</html>
